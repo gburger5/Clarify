@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
 import CameraModal from '../components/CameraModal';
 import { LANGUAGES } from '../types';
-import { Camera, Sparkles, Globe, Send, Lightbulb, ChevronDown, BookOpen, HelpCircle, Image, Calculator, Beaker, Book, Languages, Mic, MicOff } from 'lucide-react';
+import { Camera, Sparkles, Globe, Send, Lightbulb, ChevronDown, BookOpen, HelpCircle, Image, Calculator, Beaker, Book, Languages, Mic } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Home() {

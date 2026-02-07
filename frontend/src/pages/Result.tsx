@@ -29,7 +29,6 @@ export default function Result() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasStarted = useRef(false);
-  const mainAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const hasInput = capturedImage || typedText;

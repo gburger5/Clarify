@@ -11,7 +11,6 @@ import {
   GraduationCap,
   ArrowRight,
   CheckCircle,
-  Volume2,
   Play,
   Pause,
   Mic,

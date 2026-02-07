@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { getUserHomework, deleteHomework, deleteAllUserHomework } from '../services/firestore';
 import { LANGUAGES, type HomeworkResult } from '../types';
-import { Clock, BookOpen, Loader2, Trash2, AlertCircle } from 'lucide-react';
+import { Clock, BookOpen, Loader2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
