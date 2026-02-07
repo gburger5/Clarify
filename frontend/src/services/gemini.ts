@@ -13,15 +13,26 @@ function dataURLtoBase64(dataUrl: string): { base64: string; mimeType: string } 
 export async function analyzeHomework(
   imageDataUrl: string,
   targetLanguage: SupportedLanguage,
+  gradeLevel?: string,
+  hintsMode: boolean = false,
 ): Promise<GeminiAnalysis> {
   const { base64, mimeType } = dataURLtoBase64(imageDataUrl);
 
+  const gradeLevelInstruction = gradeLevel
+    ? `The student is in ${gradeLevel}. Adjust your language complexity, vocabulary, and explanation depth to be appropriate for this grade level.`
+    : '';
+
+  const explanationInstruction = hintsMode
+    ? `**explanation**: Provide helpful HINTS in ${targetLanguage} to guide the student toward solving this on their own. DO NOT give the complete solution. Instead, ask guiding questions, suggest which concepts to review, or give the first step only. Encourage critical thinking. For example, "What operation would help you isolate x?" or "Remember the order of operations: PEMDAS."`
+    : `**explanation**: Provide a clear, step-by-step explanation of how to solve or understand this homework in ${targetLanguage}. Use simple language appropriate for a student. If it's math, show each step. If it's a reading/history/science assignment, explain the key concepts.`;
+
   const prompt = `You are an expert tutor helping a student understand their homework.
+${gradeLevelInstruction}
 Analyze the image of homework and provide:
 
 1. **originalText**: Extract all text/problems visible in the image exactly as written.
 2. **translatedText**: Translate the extracted text into ${targetLanguage}.
-3. **explanation**: Provide a clear, step-by-step explanation of how to solve or understand this homework in ${targetLanguage}. Use simple language appropriate for a student. If it's math, show each step. If it's a reading/history/science assignment, explain the key concepts.
+3. ${explanationInstruction}
 4. **subject**: Identify the subject (e.g., "Math", "Science", "History", "English", "Biology").
 5. **sourceLanguage**: The language the original homework is written in (e.g., "English").
 
@@ -50,8 +61,19 @@ Respond ONLY with valid JSON in this exact format:
 export async function analyzeText(
   homeworkText: string,
   targetLanguage: SupportedLanguage,
+  gradeLevel?: string,
+  hintsMode: boolean = false,
 ): Promise<GeminiAnalysis> {
+  const gradeLevelInstruction = gradeLevel
+    ? `The student is in ${gradeLevel}. Adjust your language complexity, vocabulary, and explanation depth to be appropriate for this grade level.`
+    : '';
+
+  const explanationInstruction = hintsMode
+    ? `**explanation**: Provide helpful HINTS in ${targetLanguage} to guide the student toward solving this on their own. DO NOT give the complete solution. Instead, ask guiding questions, suggest which concepts to review, or give the first step only. Encourage critical thinking. For example, "What operation would help you isolate x?" or "Remember the order of operations: PEMDAS."`
+    : `**explanation**: Provide a clear, step-by-step explanation of how to solve or understand this homework in ${targetLanguage}. Use simple language appropriate for a student. If it's math, show each step. If it's a reading/history/science assignment, explain the key concepts.`;
+
   const prompt = `You are an expert tutor helping a student understand their homework.
+${gradeLevelInstruction}
 The student has typed in the following homework problem:
 
 "${homeworkText}"
@@ -59,7 +81,7 @@ The student has typed in the following homework problem:
 Provide:
 1. **originalText**: The homework text exactly as the student typed it.
 2. **translatedText**: Translate the text into ${targetLanguage}.
-3. **explanation**: Provide a clear, step-by-step explanation of how to solve or understand this homework in ${targetLanguage}. Use simple language appropriate for a student. If it's math, show each step. If it's a reading/history/science assignment, explain the key concepts.
+3. ${explanationInstruction}
 4. **subject**: Identify the subject (e.g., "Math", "Science", "History", "English", "Biology").
 5. **sourceLanguage**: The language the original homework is written in (e.g., "English").
 

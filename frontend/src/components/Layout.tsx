@@ -15,7 +15,7 @@ export default function Layout() {
 
       <nav className="border-t border-gray-200 bg-white px-6 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-md justify-around">
-          <NavLink to="/" className={linkClass}>
+          <NavLink to="/home" className={linkClass}>
             <Home className="h-5 w-5" />
             <span>Home</span>
           </NavLink>

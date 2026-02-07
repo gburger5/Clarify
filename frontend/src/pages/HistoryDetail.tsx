@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getHomeworkById } from '../services/firestore';
-import type { HomeworkResult } from '../types';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { getHomeworkById, getConversationByHomeworkId } from '../services/firestore';
+import type { HomeworkResult, ConversationMessage } from '../types';
+import { ArrowLeft, Loader2, MessageSquare } from 'lucide-react';
 import AudioPlayer from '../components/AudioPlayer';
 
 export default function HistoryDetail() {
@@ -10,13 +10,20 @@ export default function HistoryDetail() {
   const navigate = useNavigate();
 
   const [homework, setHomework] = useState<HomeworkResult | null>(null);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
 
-    getHomeworkById(id)
-      .then(setHomework)
+    Promise.all([
+      getHomeworkById(id),
+      getConversationByHomeworkId(id),
+    ])
+      .then(([hw, conv]) => {
+        setHomework(hw);
+        setConversation(conv);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
@@ -87,6 +94,30 @@ export default function HistoryDetail() {
           {homework.explanation}
         </p>
       </div>
+
+      {/* Conversation */}
+      {conversation.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-gray-400" />
+            <h2 className="font-semibold text-gray-900">Follow-up Q&A</h2>
+          </div>
+          <div className="space-y-3">
+            {conversation.map((msg, i) => (
+              <div
+                key={i}
+                className={`rounded-xl px-4 py-3 text-sm whitespace-pre-wrap ${
+                  msg.role === 'user'
+                    ? 'ml-8 bg-primary-600 text-white'
+                    : 'mr-8 bg-gray-100 text-gray-800'
+                }`}
+              >
+                {msg.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

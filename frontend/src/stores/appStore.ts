@@ -6,6 +6,7 @@ interface AppState {
   typedText: string | null;
   currentResult: HomeworkResult | null;
   conversation: ConversationMessage[];
+  hintsMode: boolean;
   isAnalyzing: boolean;
   isGeneratingAudio: boolean;
   isListening: boolean;
@@ -14,6 +15,7 @@ interface AppState {
   setCurrentResult: (result: HomeworkResult | null) => void;
   addMessage: (message: ConversationMessage) => void;
   clearConversation: () => void;
+  setHintsMode: (val: boolean) => void;
   setIsAnalyzing: (val: boolean) => void;
   setIsGeneratingAudio: (val: boolean) => void;
   setIsListening: (val: boolean) => void;
@@ -25,6 +27,7 @@ export const useAppStore = create<AppState>((set) => ({
   typedText: null,
   currentResult: null,
   conversation: [],
+  hintsMode: false,
   isAnalyzing: false,
   isGeneratingAudio: false,
   isListening: false,
@@ -34,6 +37,7 @@ export const useAppStore = create<AppState>((set) => ({
   addMessage: (message) =>
     set((state) => ({ conversation: [...state.conversation, message] })),
   clearConversation: () => set({ conversation: [] }),
+  setHintsMode: (val) => set({ hintsMode: val }),
   setIsAnalyzing: (val) => set({ isAnalyzing: val }),
   setIsGeneratingAudio: (val) => set({ isGeneratingAudio: val }),
   setIsListening: (val) => set({ isListening: val }),
@@ -43,6 +47,7 @@ export const useAppStore = create<AppState>((set) => ({
       typedText: null,
       currentResult: null,
       conversation: [],
+      hintsMode: false,
       isAnalyzing: false,
       isGeneratingAudio: false,
       isListening: false,

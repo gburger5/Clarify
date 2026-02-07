@@ -9,6 +9,8 @@ import {
   updateDoc,
   arrayUnion,
   getDoc,
+  deleteDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
@@ -93,5 +95,60 @@ export async function getHomeworkById(
     id: snap.id,
     ...snap.data(),
   } as HomeworkResult;
+}
+
+export async function deleteHomework(
+  homeworkId: string,
+): Promise<void> {
+  await deleteDoc(doc(db, 'homework', homeworkId));
+
+  // Also delete associated conversations
+  const conversationsQuery = query(
+    collection(db, 'conversations'),
+    where('homeworkId', '==', homeworkId),
+  );
+  const conversationsSnap = await getDocs(conversationsQuery);
+
+  const batch = writeBatch(db);
+  conversationsSnap.docs.forEach((d) => {
+    batch.delete(d.ref);
+  });
+  await batch.commit();
+}
+
+export async function deleteAllUserHomework(
+  userId: string,
+): Promise<void> {
+  const homeworkQuery = query(
+    collection(db, 'homework'),
+    where('userId', '==', userId),
+  );
+  const homeworkSnap = await getDocs(homeworkQuery);
+
+  const conversationsQuery = query(
+    collection(db, 'conversations'),
+    where('userId', '==', userId),
+  );
+  const conversationsSnap = await getDocs(conversationsQuery);
+
+  const batch = writeBatch(db);
+  homeworkSnap.docs.forEach((d) => batch.delete(d.ref));
+  conversationsSnap.docs.forEach((d) => batch.delete(d.ref));
+  await batch.commit();
+}
+
+export async function getConversationByHomeworkId(
+  homeworkId: string,
+): Promise<ConversationMessage[]> {
+  const q = query(
+    collection(db, 'conversations'),
+    where('homeworkId', '==', homeworkId),
+  );
+  const snap = await getDocs(q);
+
+  if (snap.empty) return [];
+
+  const conversation = snap.docs[0].data();
+  return conversation.messages || [];
 }
 

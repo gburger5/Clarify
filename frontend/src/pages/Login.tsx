@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { BookOpen, Mail, Lock, Loader2 } from 'lucide-react';
+import { GRADE_LEVELS } from '../types';
+import { BookOpen, Mail, Lock, Loader2, User, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -9,14 +10,37 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [age, setAge] = useState('');
+  const [gradeLevel, setGradeLevel] = useState('');
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/home" replace />;
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (isSignUp) {
-        await signUpWithEmail(email, password);
+        // Validate age/grade consistency if both provided
+        const ageNum = age ? parseInt(age) : undefined;
+        if (ageNum !== undefined && gradeLevel) {
+          // Elementary: ages 6-10 (1st-5th grade)
+          // Middle: ages 11-13 (6th-8th grade)
+          // High: ages 14-18 (9th-12th grade)
+          // College: typically 17+
+          const gradeNum = parseInt(gradeLevel);
+          if (!isNaN(gradeNum) && ageNum < 100) {
+            const expectedMinAge = Math.max(6, gradeNum + 5);
+            const expectedMaxAge = gradeNum + 6;
+            if (ageNum < expectedMinAge || ageNum > expectedMaxAge) {
+              toast.error(`Age ${ageNum} doesn't match ${gradeLevel}. Please check your information.`);
+              return;
+            }
+          } else if (gradeLevel === 'College' && ageNum < 17 && ageNum !== 0) {
+            toast.error('College students are typically 17 or older.');
+            return;
+          }
+        }
+
+        await signUpWithEmail(email, password, ageNum, gradeLevel || undefined);
         toast.success('Account created!');
       } else {
         await signInWithEmail(email, password);
@@ -96,6 +120,37 @@ export default function Login() {
               className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
+          {isSignUp && (
+            <>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="number"
+                  placeholder="Age (optional, 6+)"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  min={6}
+                  max={100}
+                  className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                />
+              </div>
+              <div className="relative">
+                <GraduationCap className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <select
+                  value={gradeLevel}
+                  onChange={(e) => setGradeLevel(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                >
+                  <option value="">Select Grade Level (optional)</option>
+                  {GRADE_LEVELS.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
           <button
             type="submit"
             disabled={loading}

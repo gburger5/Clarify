@@ -4,6 +4,8 @@ export interface UserProfile {
   displayName: string | null;
   photoURL: string | null;
   selectedLanguage: SupportedLanguage | null;
+  age?: number;
+  gradeLevel?: string;
   createdAt: number;
 }
 
@@ -25,6 +27,22 @@ export const LANGUAGES: Record<SupportedLanguage, { label: string; native: strin
   hindi: { label: 'Hindi', native: '\u0939\u093f\u0928\u094d\u0926\u0940', flag: '\ud83c\uddee\ud83c\uddf3' },
   portuguese: { label: 'Portuguese', native: 'Portugu\u00eas', flag: '\ud83c\udde7\ud83c\uddf7' },
 };
+
+export const GRADE_LEVELS = [
+  '1st Grade',
+  '2nd Grade',
+  '3rd Grade',
+  '4th Grade',
+  '5th Grade',
+  '6th Grade',
+  '7th Grade',
+  '8th Grade',
+  '9th Grade',
+  '10th Grade',
+  '11th Grade',
+  '12th Grade',
+  'College',
+] as const;
 
 export interface HomeworkResult {
   id?: string;

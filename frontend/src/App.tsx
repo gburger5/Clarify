@@ -4,12 +4,14 @@ import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './stores/authStore';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Result from './pages/Result';
 import History from './pages/History';
 import Profile from './pages/Profile';
 import HistoryDetail from './pages/HistoryDetail';
+import FAQ from './pages/FAQ';
 
 
 export default function App() {
@@ -30,7 +32,9 @@ export default function App() {
         }}
       />
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/faq" element={<FAQ />} />
         <Route
           element={
             <ProtectedRoute>
@@ -38,7 +42,7 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/history/:id" element={<HistoryDetail />} />

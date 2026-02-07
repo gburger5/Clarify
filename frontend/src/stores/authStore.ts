@@ -18,17 +18,23 @@ interface AuthState {
   initialized: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, age?: number, gradeLevel?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateLanguage: (language: SupportedLanguage) => Promise<void>;
   init: () => () => void;
 }
 
-async function ensureUserProfile(user: User): Promise<UserProfile> {
+async function ensureUserProfile(user: User, age?: number, gradeLevel?: string): Promise<UserProfile> {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
   if (snap.exists()) {
-    return snap.data() as UserProfile;
+    const data = snap.data() as UserProfile;
+    // Provide defaults for existing users without age/gradeLevel
+    if (!data.gradeLevel) {
+      await setDoc(ref, { gradeLevel: 'College' }, { merge: true });
+      data.gradeLevel = 'College';
+    }
+    return data;
   }
   const profile: UserProfile = {
     uid: user.uid,
@@ -36,6 +42,8 @@ async function ensureUserProfile(user: User): Promise<UserProfile> {
     displayName: user.displayName,
     photoURL: user.photoURL,
     selectedLanguage: null,
+    age,
+    gradeLevel: gradeLevel || 'College',
     createdAt: Date.now(),
   };
   await setDoc(ref, profile);
@@ -72,11 +80,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUpWithEmail: async (email, password) => {
+  signUpWithEmail: async (email, password, age, gradeLevel) => {
     set({ loading: true });
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      const profile = await ensureUserProfile(result.user);
+      const profile = await ensureUserProfile(result.user, age, gradeLevel);
       set({ user: result.user, profile, loading: false });
     } catch {
       set({ loading: false });

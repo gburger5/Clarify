@@ -6,7 +6,7 @@ import { analyzeHomework, analyzeText, askFollowUp } from '../services/gemini';
 import { generateSpeech } from '../services/elevenlabs';
 import { saveHomeworkResult, createConversation, addConversationMessage, uploadAudioBlob, updateHomeworkAudioUrl } from '../services/firestore';
 import AudioPlayer from '../components/AudioPlayer';
-import { Loader2, Mic, MicOff, Send, ArrowLeft, BookOpen } from 'lucide-react';
+import { Loader2, Mic, MicOff, Send, ArrowLeft, BookOpen, Lightbulb } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ConversationMessage } from '../types';
 
@@ -14,7 +14,7 @@ export default function Result() {
   const navigate = useNavigate();
   const { user, profile } = useAuthStore();
   const {
-    capturedImage, typedText, currentResult, conversation,
+    capturedImage, typedText, currentResult, conversation, hintsMode,
     isAnalyzing, isGeneratingAudio, isListening,
     setCapturedImage, setTypedText, setCurrentResult, addMessage,
     setIsAnalyzing, setIsGeneratingAudio, setIsListening,
@@ -33,7 +33,7 @@ export default function Result() {
   useEffect(() => {
     const hasInput = capturedImage || typedText;
     if (!hasInput || !user || !profile?.selectedLanguage) {
-      navigate('/');
+      navigate('/home');
       return;
     }
     if (currentResult || hasStarted.current) return;
@@ -46,8 +46,8 @@ export default function Result() {
       try {
         console.log('[Clarify] Sending to Gemini...');
         const analysis = localImage
-          ? await analyzeHomework(localImage, profile.selectedLanguage!)
-          : await analyzeText(localText!, profile.selectedLanguage!);
+          ? await analyzeHomework(localImage, profile.selectedLanguage!, profile.gradeLevel, hintsMode)
+          : await analyzeText(localText!, profile.selectedLanguage!, profile.gradeLevel, hintsMode);
         console.log('[Clarify] Gemini responded:', analysis);
 
         const result = {
@@ -109,7 +109,7 @@ export default function Result() {
         console.error('[Clarify] Analysis failed:', err);
         toast.error('Failed to analyze homework. Please try again.');
         setIsAnalyzing(false);
-        navigate('/');
+        navigate('/home');
       }
     };
     run();
@@ -199,7 +199,7 @@ export default function Result() {
     <div className="mx-auto flex h-full max-w-lg flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-        <button onClick={() => { reset(); navigate('/'); }} className="rounded-lg p-1 text-gray-500 hover:bg-gray-100">
+        <button onClick={() => { reset(); navigate('/home'); }} className="rounded-lg p-1 text-gray-500 hover:bg-gray-100">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
@@ -236,7 +236,17 @@ export default function Result() {
         {/* Explanation */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Explanation</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {hintsMode ? 'Hints' : 'Explanation'}
+              </h3>
+              {hintsMode && (
+                <span className="flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
+                  <Lightbulb className="h-3 w-3" />
+                  Hints Mode
+                </span>
+              )}
+            </div>
             <AudioPlayer src={audioUrl} loading={isGeneratingAudio} />
           </div>
           <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-900 whitespace-pre-wrap">
