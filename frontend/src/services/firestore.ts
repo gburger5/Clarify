@@ -8,6 +8,7 @@ import {
   doc,
   updateDoc,
   arrayUnion,
+  getDoc,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
@@ -61,3 +62,19 @@ export async function addConversationMessage(
     messages: arrayUnion(message),
   });
 }
+
+export async function getHomeworkById(
+  id: string,
+): Promise<HomeworkResult> {
+  const snap = await getDoc(doc(db, 'homework', id));
+
+  if (!snap.exists()) {
+    throw new Error('Homework not found');
+  }
+
+  return {
+    id: snap.id,
+    ...snap.data(),
+  } as HomeworkResult;
+}
+

@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import Result from './pages/Result';
 import History from './pages/History';
 import Profile from './pages/Profile';
+import HistoryDetail from './pages/HistoryDetail';
+
 
 export default function App() {
   const init = useAuthStore((s) => s.init);
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/history/:id" element={<HistoryDetail />} />
         </Route>
         <Route
           path="/result"

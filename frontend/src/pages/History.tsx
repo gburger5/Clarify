@@ -3,17 +3,22 @@ import { useAuthStore } from '../stores/authStore';
 import { getUserHomework } from '../services/firestore';
 import { LANGUAGES, type HomeworkResult } from '../types';
 import { Clock, BookOpen, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function History() {
   const { user } = useAuthStore();
   const [homework, setHomework] = useState<HomeworkResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
     getUserHomework(user.uid)
       .then(setHomework)
-      .catch(() => {})
+      .catch((err) => {
+  console.error('History query failed:', err);
+})
       .finally(() => setLoading(false));
   }, [user]);
 
@@ -44,7 +49,8 @@ export default function History() {
           {homework.map((hw) => (
             <div
               key={hw.id}
-              className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+              onClick={() => navigate(`/history/${hw.id}`)}
+              className="flex cursor-pointer gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-gray-50"
             >
               {hw.imageUrl && (
                 <img
