@@ -14,6 +14,8 @@ import {
   Volume2,
   Play,
   Pause,
+  Mic,
+  Keyboard,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -82,10 +84,10 @@ export default function Landing() {
         <div className="grid gap-12 md:grid-cols-2 md:items-center">
           <div>
             <h1 className="text-4xl font-bold leading-tight text-gray-900 md:text-5xl lg:text-6xl">
-              Understand Homework in Your Language — Quickly & Easily
+              Understand Homework in Your Language
             </h1>
             <p className="mt-6 text-lg text-gray-600 md:text-xl">
-              Upload a picture or type your problem, and Clarify explains it step-by-step in your language — with audio so you can listen and learn.
+              Scan, type, or speak your problem. Clarify explains it step-by-step in your language with audio so you can listen and learn.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
@@ -186,16 +188,20 @@ export default function Landing() {
             {/* Step 1 */}
             <div className="text-center">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-100">
-                <Camera className="h-10 w-10 text-primary-600" />
+                <div className="flex gap-1">
+                  <Camera className="h-6 w-6 text-primary-600" />
+                  <Keyboard className="h-6 w-6 text-primary-600" />
+                  <Mic className="h-6 w-6 text-primary-600" />
+                </div>
               </div>
               <div className="mt-4 flex items-center justify-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">
                   1
                 </span>
-                <h3 className="text-xl font-semibold text-gray-900">Upload or Type</h3>
+                <h3 className="text-xl font-semibold text-gray-900">Scan, Type, or Speak</h3>
               </div>
               <p className="mt-3 text-gray-600">
-                Snap a photo of your homework or type the problem directly into Clarify
+                Take a photo, type your question, or simply speak it - whatever works best for you
               </p>
             </div>
 
@@ -258,12 +264,12 @@ export default function Landing() {
 
             {/* Feature 2 */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                <Volume2 className="h-6 w-6 text-primary-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+                <Mic className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">Audio Explanations</h3>
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">Speech-to-Speech</h3>
               <p className="mt-2 text-gray-600">
-                Listen to explanations read aloud in your language — perfect for auditory learners
+                Speak your question and get instant audio explanations. It's like talking to a real tutor.
               </p>
             </div>
 
@@ -280,8 +286,8 @@ export default function Landing() {
 
             {/* Feature 4 */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                <Lightbulb className="h-6 w-6 text-primary-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
+                <Lightbulb className="h-6 w-6 text-amber-600" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-gray-900">Hints Mode</h3>
               <p className="mt-2 text-gray-600">
@@ -291,8 +297,8 @@ export default function Landing() {
 
             {/* Feature 5 */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                <Eye className="h-6 w-6 text-primary-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
+                <Eye className="h-6 w-6 text-purple-600" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-gray-900">Handwriting Recognition</h3>
               <p className="mt-2 text-gray-600">
@@ -302,8 +308,8 @@ export default function Landing() {
 
             {/* Feature 6 */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-lg">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                <GraduationCap className="h-6 w-6 text-primary-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                <GraduationCap className="h-6 w-6 text-blue-600" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-gray-900">All Grade Levels</h3>
               <p className="mt-2 text-gray-600">

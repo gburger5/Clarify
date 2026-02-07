@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
 import CameraModal from '../components/CameraModal';
 import { LANGUAGES } from '../types';
-import { Camera, Sparkles, Globe, Send, Lightbulb, ChevronDown, BookOpen, HelpCircle, Image, Calculator, Beaker, Book, Languages } from 'lucide-react';
+import { Camera, Sparkles, Globe, Send, Lightbulb, ChevronDown, BookOpen, HelpCircle, Image, Calculator, Beaker, Book, Languages, Mic, MicOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Home() {
@@ -15,6 +15,9 @@ export default function Home() {
   const [homeworkText, setHomeworkText] = useState('');
   const [showTypeInput, setShowTypeInput] = useState(false);
   const [showHintTooltip, setShowHintTooltip] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const requireLanguage = (): boolean => {
     if (!profile?.selectedLanguage) {
@@ -37,6 +40,60 @@ export default function Home() {
     if (!requireLanguage()) return;
     setTypedText(homeworkText.trim());
     navigate('/result');
+  };
+
+  const startVoiceInput = () => {
+    if (!requireLanguage()) return;
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      toast.error('Speech recognition not supported in this browser');
+      return;
+    }
+
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    // Use English for homework questions (they're usually in English)
+    recognition.lang = 'en-US';
+
+    setIsListening(true);
+    setVoiceTranscript('');
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join('');
+      setVoiceTranscript(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      toast.error('Voice recognition failed. Please try again.');
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopVoiceInput = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+
+      // Submit the transcript if we have one
+      if (voiceTranscript.trim()) {
+        setTypedText(voiceTranscript.trim());
+        navigate('/result');
+      } else {
+        toast.error('No speech detected. Please try again.');
+      }
+    }
   };
 
   const langInfo = profile?.selectedLanguage ? LANGUAGES[profile.selectedLanguage] : null;
@@ -181,16 +238,54 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Secondary Action: Type It Out */}
-      {!showTypeInput ? (
-        <button
-          onClick={() => setShowTypeInput(true)}
-          className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 px-4 py-4 text-sm font-medium text-gray-600 transition-all hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
-        >
-          <Send className="h-4 w-4" />
-          Type your question instead
-        </button>
-      ) : (
+      {/* Secondary Actions: Type or Voice */}
+      {!showTypeInput && !isListening ? (
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setShowTypeInput(true)}
+            className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 px-4 py-4 text-sm font-medium text-gray-600 transition-all hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
+          >
+            <Send className="h-4 w-4" />
+            Type
+          </button>
+          <button
+            onClick={startVoiceInput}
+            className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 px-4 py-4 text-sm font-medium text-gray-600 transition-all hover:border-green-400 hover:bg-green-50 hover:text-green-700"
+          >
+            <Mic className="h-4 w-4" />
+            Speak
+          </button>
+        </div>
+      ) : isListening ? (
+        <div className="mb-6 rounded-xl border-2 border-green-500 bg-green-50 p-6">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
+              <Mic className="h-6 w-6 animate-pulse text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-green-900">Listening...</h3>
+              <p className="text-sm text-green-700">Keep speaking, I'll wait for you to finish</p>
+            </div>
+          </div>
+          {voiceTranscript ? (
+            <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
+              <p className="text-sm text-gray-700">{voiceTranscript}</p>
+            </div>
+          ) : (
+            <div className="mb-4 rounded-lg border-2 border-dashed border-green-300 bg-white p-4 text-center">
+              <p className="text-sm text-gray-500">Waiting for your voice...</p>
+            </div>
+          )}
+          <button
+            onClick={stopVoiceInput}
+            disabled={!voiceTranscript.trim()}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-6 py-3 font-semibold text-white transition-all hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Done - Get Answer
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+      ) : showTypeInput ? (
         <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700">Type your question</h3>
@@ -225,7 +320,7 @@ export default function Home() {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Quick Start Examples */}
       <div className="mb-6">

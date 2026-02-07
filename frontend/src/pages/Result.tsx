@@ -29,6 +29,7 @@ export default function Result() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const hasStarted = useRef(false);
+  const mainAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const hasInput = capturedImage || typedText;
@@ -85,26 +86,29 @@ export default function Result() {
           return null;
         });
 
-        // Generate audio in the background
-        setIsGeneratingAudio(true);
-        try {
-          const { blobUrl, blob } = await generateSpeech(analysis.explanation, profile.selectedLanguage!);
-          setAudioUrl(blobUrl);
+        // Generate audio in the background - delay to ensure loading state renders
+        setTimeout(async () => {
+          setIsGeneratingAudio(true);
+          try {
+            const { blobUrl, blob } = await generateSpeech(analysis.explanation, profile.selectedLanguage!);
+            setAudioUrl(blobUrl);
+            setIsGeneratingAudio(false);
 
-          // Upload audio to Firebase Storage & save URL to Firestore
-          savePromise.then(async (docId) => {
-            if (!docId) return;
-            try {
-              const downloadUrl = await uploadAudioBlob(user.uid, blob);
-              await updateHomeworkAudioUrl(docId, downloadUrl);
-            } catch (e) {
-              console.error('[Clarify] Audio upload failed:', e);
-            }
-          });
-        } catch {
-          toast.error('Audio generation failed');
-        }
-        setIsGeneratingAudio(false);
+            // Upload audio to Firebase Storage & save URL to Firestore
+            savePromise.then(async (docId) => {
+              if (!docId) return;
+              try {
+                const downloadUrl = await uploadAudioBlob(user.uid, blob);
+                await updateHomeworkAudioUrl(docId, downloadUrl);
+              } catch (e) {
+                console.error('[Clarify] Audio upload failed:', e);
+              }
+            });
+          } catch {
+            toast.error('Audio generation failed');
+            setIsGeneratingAudio(false);
+          }
+        }, 0);
       } catch (err) {
         console.error('[Clarify] Analysis failed:', err);
         toast.error('Failed to analyze homework. Please try again.');
@@ -126,9 +130,25 @@ export default function Result() {
       toast.error('Speech recognition not supported in this browser');
       return;
     }
+
+    // Map user's selected language to speech recognition language code
+    const speechLangMap: Record<string, string> = {
+      spanish: 'es-ES',
+      chinese: 'zh-CN',
+      arabic: 'ar-SA',
+      vietnamese: 'vi-VN',
+      french: 'fr-FR',
+      hindi: 'hi-IN',
+      portuguese: 'pt-BR',
+    };
+
     const recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = false;
+    // Use the user's selected language for speech recognition
+    recognition.lang = profile?.selectedLanguage
+      ? speechLangMap[profile.selectedLanguage] || 'en-US'
+      : 'en-US';
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setFollowUpText(transcript);
