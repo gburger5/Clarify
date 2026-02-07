@@ -10,7 +10,7 @@ import {
   arrayUnion,
   getDoc,
 } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import type { HomeworkResult, ConversationMessage } from '../types';
 
@@ -61,6 +61,23 @@ export async function addConversationMessage(
   await updateDoc(ref_doc, {
     messages: arrayUnion(message),
   });
+}
+
+export async function uploadAudioBlob(
+  userId: string,
+  blob: Blob,
+): Promise<string> {
+  const storageRef = ref(storage, `homework-audio/${userId}/${Date.now()}.mp3`);
+  await uploadBytes(storageRef, blob, { contentType: 'audio/mpeg' });
+  return getDownloadURL(storageRef);
+}
+
+export async function updateHomeworkAudioUrl(
+  homeworkId: string,
+  audioUrl: string,
+): Promise<void> {
+  const docRef = doc(db, 'homework', homeworkId);
+  await updateDoc(docRef, { audioUrl });
 }
 
 export async function getHomeworkById(

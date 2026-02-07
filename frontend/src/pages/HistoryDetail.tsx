@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getHomeworkById } from '../services/firestore';
 import type { HomeworkResult } from '../types';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import AudioPlayer from '../components/AudioPlayer';
 
 export default function HistoryDetail() {
   const { id } = useParams();
@@ -78,8 +79,11 @@ export default function HistoryDetail() {
 
       {/* Explanation */}
       <div>
-        <h2 className="font-semibold">Explanation</h2>
-        <p className="text-gray-700 whitespace-pre-line">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">Explanation</h2>
+          {homework.audioUrl && <AudioPlayer src={homework.audioUrl} />}
+        </div>
+        <p className="mt-1 text-gray-700 whitespace-pre-line">
           {homework.explanation}
         </p>
       </div>

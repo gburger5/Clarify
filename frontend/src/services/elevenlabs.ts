@@ -19,7 +19,7 @@ const LANGUAGE_CODES: Record<SupportedLanguage, string> = {
 export async function generateSpeech(
   text: string,
   language: SupportedLanguage,
-): Promise<string> {
+): Promise<{ blobUrl: string; blob: Blob }> {
   const response = await fetch(`${BASE_URL}/text-to-speech/${VOICE_ID}`, {
     method: 'POST',
     headers: {
@@ -42,5 +42,5 @@ export async function generateSpeech(
   }
 
   const blob = await response.blob();
-  return URL.createObjectURL(blob);
+  return { blobUrl: URL.createObjectURL(blob), blob };
 }

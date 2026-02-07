@@ -25,7 +25,7 @@ Analyze the image of homework and provide:
 4. **subject**: Identify the subject (e.g., "Math", "Science", "History", "English", "Biology").
 5. **sourceLanguage**: The language the original homework is written in (e.g., "English").
 
-IMPORTANT: The explanation must be entirely in ${targetLanguage}. Be encouraging and thorough.
+IMPORTANT: The explanation must be entirely in ${targetLanguage}. Be thorough but brief, do not include unnecessary details. Do not use Markdown syntax when writing the explanation. Keep it to Plaintext.
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -63,8 +63,7 @@ Provide:
 4. **subject**: Identify the subject (e.g., "Math", "Science", "History", "English", "Biology").
 5. **sourceLanguage**: The language the original homework is written in (e.g., "English").
 
-IMPORTANT: The explanation must be entirely in ${targetLanguage}. Be encouraging and thorough.
-
+IMPORTANT: The explanation must be entirely in ${targetLanguage}. Be thorough but brief, do not include unnecessary details. Do not use Markdown syntax when writing the explanation. Keep it to Plaintext.
 Respond ONLY with valid JSON in this exact format:
 {
   "originalText": "...",

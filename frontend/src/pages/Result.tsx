@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
 import { analyzeHomework, analyzeText, askFollowUp } from '../services/gemini';
 import { generateSpeech } from '../services/elevenlabs';
-import { saveHomeworkResult, createConversation, addConversationMessage } from '../services/firestore';
+import { saveHomeworkResult, createConversation, addConversationMessage, uploadAudioBlob, updateHomeworkAudioUrl } from '../services/firestore';
 import AudioPlayer from '../components/AudioPlayer';
 import { Loader2, Mic, MicOff, Send, ArrowLeft, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -70,7 +70,7 @@ export default function Result() {
 
         // Save to Firestore in the background (don't store base64 image)
         const { imageUrl: _img, ...firestoreData } = result;
-        void saveHomeworkResult({ ...firestoreData, imageUrl: '' }).then(async (docId) => {
+        const savePromise = saveHomeworkResult({ ...firestoreData, imageUrl: '' }).then(async (docId) => {
           try {
             const convId = await createConversation(docId, user.uid);
             setConversationId(convId);
@@ -79,13 +79,28 @@ export default function Result() {
           } catch (e) {
             console.error('[Clarify] Conversation create failed:', e);
           }
-        }).catch((e) => console.error('[Clarify] Firestore save failed:', e));
+          return docId;
+        }).catch((e) => {
+          console.error('[Clarify] Firestore save failed:', e);
+          return null;
+        });
 
         // Generate audio in the background
         setIsGeneratingAudio(true);
         try {
-          const url = await generateSpeech(analysis.explanation, profile.selectedLanguage!);
-          setAudioUrl(url);
+          const { blobUrl, blob } = await generateSpeech(analysis.explanation, profile.selectedLanguage!);
+          setAudioUrl(blobUrl);
+
+          // Upload audio to Firebase Storage & save URL to Firestore
+          savePromise.then(async (docId) => {
+            if (!docId) return;
+            try {
+              const downloadUrl = await uploadAudioBlob(user.uid, blob);
+              await updateHomeworkAudioUrl(docId, downloadUrl);
+            } catch (e) {
+              console.error('[Clarify] Audio upload failed:', e);
+            }
+          });
         } catch {
           toast.error('Audio generation failed');
         }
@@ -152,8 +167,8 @@ export default function Result() {
       if (conversationId) addConversationMessage(conversationId, assistantMsg);
 
       try {
-        const url = await generateSpeech(answer, profile.selectedLanguage);
-        setFollowUpAudioUrl(url);
+        const { blobUrl } = await generateSpeech(answer, profile.selectedLanguage);
+        setFollowUpAudioUrl(blobUrl);
       } catch { /* audio optional */ }
     } catch {
       toast.error('Failed to get answer');
