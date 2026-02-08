@@ -10,18 +10,41 @@ function dataURLtoBase64(dataUrl: string): { base64: string; mimeType: string } 
   return { base64, mimeType };
 }
 
-function sanitizeJSON(jsonString: string): string {
+function extractAndCleanJSON(text: string): string {
+  // Remove markdown code block markers if present
+  let cleanedText = text.trim();
+
+  // Check for code blocks and remove them
+  if (cleanedText.startsWith('```')) {
+    // Remove opening ```json or ```
+    cleanedText = cleanedText.replace(/^```(?:json)?\s*\n?/, '');
+    // Remove closing ```
+    cleanedText = cleanedText.replace(/\n?```\s*$/, '');
+  }
+
+  cleanedText = cleanedText.trim();
+
+  // Extract the JSON object (greedy match to get the complete object)
+  const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('No JSON object found in response');
+  }
+
+  let jsonString = jsonMatch[0];
+
   // Remove any control characters that would break JSON parsing
-  // but preserve intentional JSON structure
-  return jsonString
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
-      // Keep newlines and tabs for now, we'll handle them differently
-      if (match === '\n') return '\\n';
-      if (match === '\r') return '\\r';
-      if (match === '\t') return '\\t';
-      // Remove other control characters
-      return '';
-    });
+  // but DON'T touch characters inside string values
+  jsonString = jsonString.replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
+    // Keep newlines and tabs as-is (they're already properly formatted in the JSON)
+    if (match === '\n' || match === '\r' || match === '\t') return match;
+    // Remove other control characters
+    return '';
+  });
+
+  // Remove any trailing commas before closing braces/brackets
+  jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
+
+  return jsonString;
 }
 
 export async function analyzeHomework(
@@ -72,10 +95,15 @@ Respond ONLY with valid JSON in this exact format:
   ]);
 
   const text = result.response.text();
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Failed to parse Gemini response');
-  const sanitized = sanitizeJSON(jsonMatch[0]);
-  return JSON.parse(sanitized) as GeminiAnalysis;
+
+  try {
+    const cleanedJSON = extractAndCleanJSON(text);
+    return JSON.parse(cleanedJSON) as GeminiAnalysis;
+  } catch (error) {
+    console.error('[Clarify] JSON parsing error. Raw response:', text);
+    console.error('[Clarify] Parse error:', error);
+    throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : 'Invalid JSON format'}`);
+  }
 }
 
 export async function analyzeText(
@@ -124,10 +152,15 @@ Respond ONLY with valid JSON in this exact format:
   const result = await model.generateContent(prompt);
 
   const text = result.response.text();
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Failed to parse Gemini response');
-  const sanitized = sanitizeJSON(jsonMatch[0]);
-  return JSON.parse(sanitized) as GeminiAnalysis;
+
+  try {
+    const cleanedJSON = extractAndCleanJSON(text);
+    return JSON.parse(cleanedJSON) as GeminiAnalysis;
+  } catch (error) {
+    console.error('[Clarify] JSON parsing error. Raw response:', text);
+    console.error('[Clarify] Parse error:', error);
+    throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : 'Invalid JSON format'}`);
+  }
 }
 
 export async function askFollowUp(

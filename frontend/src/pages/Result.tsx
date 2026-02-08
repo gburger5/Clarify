@@ -110,7 +110,8 @@ export default function Result() {
         }, 0);
       } catch (err) {
         console.error('[Clarify] Analysis failed:', err);
-        toast.error('Failed to analyze homework. Please try again.');
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        toast.error(`Analysis failed: ${errorMessage}`, { duration: 5000 });
         setIsAnalyzing(false);
         navigate('/home');
       }
