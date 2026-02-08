@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { getUserHomework, deleteHomework, deleteAllUserHomework } from '../services/firestore';
 import { LANGUAGES, type HomeworkResult } from '../types';
-import { Clock, BookOpen, Loader2, Trash2 } from 'lucide-react';
+import { Clock, BookOpen, Loader2, Trash2, GraduationCap, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import StudyGuideModal from '../components/StudyGuideModal';
 
 
 type DateGroup = 'Today' | 'Yesterday' | 'This Week' | 'This Month' | 'Earlier';
@@ -28,6 +29,8 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
+  const [selectedHomework, setSelectedHomework] = useState<Set<string>>(new Set());
+  const [showStudyGuide, setShowStudyGuide] = useState(false);
   const navigate = useNavigate();
 
   const loadHomework = async () => {
@@ -82,6 +85,31 @@ export default function History() {
     }
   };
 
+  const toggleSelection = (e: React.MouseEvent, homeworkId: string) => {
+    e.stopPropagation();
+    setSelectedHomework((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(homeworkId)) {
+        newSet.delete(homeworkId);
+      } else {
+        newSet.add(homeworkId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCreateStudyGuide = () => {
+    if (selectedHomework.size === 0) {
+      toast.error('Select at least one homework item');
+      return;
+    }
+    setShowStudyGuide(true);
+  };
+
+  const getSelectedHomeworkData = (): HomeworkResult[] => {
+    return homework.filter((hw) => selectedHomework.has(hw.id!));
+  };
+
   // Get unique subjects
   const subjects = ['All', ...new Set(homework.map((hw) => hw.subject))];
 
@@ -118,6 +146,15 @@ export default function History() {
     <div className="mx-auto max-w-lg px-5 py-6">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">History</h1>
+        {selectedHomework.size > 0 && (
+          <button
+            onClick={handleCreateStudyGuide}
+            className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-primary-700 hover:shadow-lg"
+          >
+            <GraduationCap className="h-4 w-4" />
+            Create Study Guide ({selectedHomework.size})
+          </button>
+        )}
       </div>
 
       {homework.length === 0 ? (
@@ -132,6 +169,25 @@ export default function History() {
         </div>
       ) : (
         <>
+          {/* Study Guide Prompt */}
+          {selectedHomework.size === 0 && (
+            <div className="mb-4 rounded-lg border-2 border-dashed border-primary-200 bg-primary-50/50 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100">
+                  <GraduationCap className="h-4 w-4 text-primary-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    💡 Create a study guide
+                  </p>
+                  <p className="mt-1 text-xs text-gray-600">
+                    Select multiple homework items using the checkboxes to generate a personalized study guide in your language
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Subject Filters */}
           <div className="mb-4 flex flex-wrap gap-2">
             {subjects.map((subject) => (
@@ -180,8 +236,26 @@ export default function History() {
                       {items.map((hw) => (
             <div
               key={hw.id}
-              className="group relative flex cursor-pointer gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-gray-50"
+              className="group relative flex cursor-pointer gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:bg-gray-50"
             >
+              {/* Selection Checkbox */}
+              <div
+                onClick={(e) => toggleSelection(e, hw.id!)}
+                className="flex shrink-0 items-start pt-1"
+              >
+                <div
+                  className={`flex h-5 w-5 cursor-pointer items-center justify-center rounded border-2 transition-all ${
+                    selectedHomework.has(hw.id!)
+                      ? 'border-primary-600 bg-primary-600'
+                      : 'border-gray-300 bg-white hover:border-primary-400'
+                  }`}
+                >
+                  {selectedHomework.has(hw.id!) && (
+                    <Check className="h-3.5 w-3.5 text-white" />
+                  )}
+                </div>
+              </div>
+
               <div
                 onClick={() => navigate(`/history/${hw.id}`)}
                 className="flex flex-1 gap-4"
@@ -231,6 +305,17 @@ export default function History() {
             </div>
           )}
         </>
+      )}
+
+      {/* Study Guide Modal */}
+      {showStudyGuide && (
+        <StudyGuideModal
+          homeworkItems={getSelectedHomeworkData()}
+          onClose={() => {
+            setShowStudyGuide(false);
+            setSelectedHomework(new Set());
+          }}
+        />
       )}
     </div>
   );

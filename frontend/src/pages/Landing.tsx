@@ -15,6 +15,7 @@ import {
   Pause,
   Mic,
   Keyboard,
+  FileText,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -223,7 +224,10 @@ export default function Landing() {
             {/* Step 3 */}
             <div className="text-center">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-100">
-                <BookOpen className="h-10 w-10 text-primary-600" />
+                <div className="flex gap-1">
+                  <BookOpen className="h-7 w-7 text-primary-600" />
+                  <FileText className="h-7 w-7 text-primary-600" />
+                </div>
               </div>
               <div className="mt-4 flex items-center justify-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">
@@ -232,7 +236,7 @@ export default function Landing() {
                 <h3 className="text-xl font-semibold text-gray-900">Learn & Review</h3>
               </div>
               <p className="mt-3 text-gray-600">
-                Read explanations in your preferred language and save problems to review later
+                Review your history and create personalized study guides from multiple problems
               </p>
             </div>
           </div>
@@ -313,6 +317,17 @@ export default function Landing() {
               <h3 className="mt-4 text-lg font-semibold text-gray-900">All Grade Levels</h3>
               <p className="mt-2 text-gray-600">
                 Supports students from 1st grade through college with age-appropriate explanations
+              </p>
+            </div>
+
+            {/* Feature 7 - Study Guides */}
+            <div className="rounded-2xl border-2 border-primary-200 bg-gradient-to-br from-primary-50 to-blue-50 p-6 shadow-sm transition-shadow hover:shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
+                <FileText className="h-6 w-6 text-primary-600" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">Study Guide Generator</h3>
+              <p className="mt-2 text-gray-600">
+                Select multiple homework problems to create a personalized study guide with practice problems in your language
               </p>
             </div>
           </div>

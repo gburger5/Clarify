@@ -181,3 +181,51 @@ Respond with ONLY your answer (no JSON, no formatting tags - just natural conver
   const result = await model.generateContent(prompt);
   return result.response.text();
 }
+
+export async function generateStudyGuide(
+  homeworkItems: Array<{ originalText: string; explanation: string; subject: string }>,
+  targetLanguage: SupportedLanguage,
+  gradeLevel?: string,
+): Promise<string> {
+  const homeworkList = homeworkItems
+    .map((item, index) => `${index + 1}. ${item.subject}: ${item.originalText}\n   Explanation: ${item.explanation}`)
+    .join('\n\n');
+
+  const gradeLevelInstruction = gradeLevel
+    ? `The student is in ${gradeLevel}. Adjust your language complexity, vocabulary, and explanation depth to be appropriate for this grade level.`
+    : '';
+
+  const prompt = `You are a helpful tutor creating a BRIEF and CONCISE study guide for a student.
+${gradeLevelInstruction}
+
+The student has worked on these homework problems:
+
+${homeworkList}
+
+Create a brief, focused study guide ENTIRELY in ${targetLanguage}. Include these sections (translate the section names to ${targetLanguage}):
+
+1. Overview - 2-3 sentences summarizing the topics
+2. Key Concepts - Main concepts in bullet point format
+3. Problem-Solving Steps - Brief explanation of methodology
+4. Practice Problems - 3-5 similar practice problems for the student to try (with varying difficulty)
+5. Quick Tips - 3-4 concise tips for similar problems
+6. Summary - 1-2 sentence recap
+
+CRITICAL FORMATTING RULES:
+- Use PLAIN TEXT only (no markdown symbols like **, ##, or *)
+- Section headings should be in ALL CAPITAL LETTERS and in ${targetLanguage}
+- Use simple hyphens (-) for bullet points
+- Keep it BRIEF and CONCISE - no unnecessary details
+- Be friendly but direct
+- EVERYTHING must be in ${targetLanguage} - section headings, content, practice problems, tips, everything!
+- For practice problems, just list the problems - don't include answers
+
+Example heading format (in ${targetLanguage}):
+RESUMEN (not "OVERVIEW" or "SUMMARY")
+CONCEPTOS CLAVE (not "KEY CONCEPTS")
+
+Respond with ONLY the study guide content in plain text format, ENTIRELY in ${targetLanguage}.`;
+
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+}
