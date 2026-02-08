@@ -4,7 +4,8 @@
 
 Clarify is a multilingual AI homework assistant that helps students understand their assignments in their native language. Built for the millions of English Language Learners who struggle not because they can't learn, but because education isn't delivered in a language they fully understand.
 
-## Demo - To Be Added
+## Demo 
+[Demo](https://youtu.be/87MQaSa8Vyo)
 
 ## 🌟 The Problem
 
