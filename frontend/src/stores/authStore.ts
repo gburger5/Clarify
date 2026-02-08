@@ -40,12 +40,12 @@ async function ensureUserProfile(user: User, age?: number, gradeLevel?: string):
   }
   const profile: UserProfile = {
     uid: user.uid,
-    email: user.email,
-    displayName: user.displayName,
-    photoURL: user.photoURL,
+    email: user.email ?? null, // Ensure null instead of undefined
+    displayName: user.displayName ?? null, // Ensure null instead of undefined
+    photoURL: user.photoURL ?? null, // Ensure null instead of undefined
     selectedLanguage: null,
-    age,
-    gradeLevel: gradeLevel || 'College',
+    ...(age !== undefined && { age }), // Only include age if defined
+    gradeLevel: gradeLevel ?? 'College', // Default to College if undefined
     createdAt: Date.now(),
   };
   await setDoc(ref, profile);

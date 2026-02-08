@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
 import CameraModal from '../components/CameraModal';
 import { LANGUAGES } from '../types';
-import { Camera, Sparkles, Globe, Send, Lightbulb, ChevronDown, BookOpen, HelpCircle, Image, Calculator, Beaker, Book, Languages, Mic } from 'lucide-react';
+import { Camera, Sparkles, Globe, Send, Lightbulb, ChevronDown, BookOpen, HelpCircle, Image, Calculator, Beaker, Book, Languages, Mic, X, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Home() {
@@ -17,6 +17,7 @@ export default function Home() {
   const [showHintTooltip, setShowHintTooltip] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [dismissedPrompt, setDismissedPrompt] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const requireLanguage = (): boolean => {
@@ -100,6 +101,9 @@ export default function Home() {
   const firstName = profile?.displayName?.split(' ')[0] || 'there';
   const greeting = `Welcome back, ${firstName}`;
 
+  // Check if user should be prompted to set grade level
+  const shouldPromptGrade = !dismissedPrompt && (!profile?.gradeLevel || profile.gradeLevel === 'College');
+
   const exampleProblems = [
     'Solve for x: 2x + 5 = 13',
     'What is photosynthesis?',
@@ -131,6 +135,36 @@ export default function Home() {
           Get instant homework help in your language
         </p>
       </div>
+
+      {/* Grade Level Prompt */}
+      {shouldPromptGrade && (
+        <div className="mb-6 relative rounded-xl border-2 border-primary-200 bg-gradient-to-r from-primary-50 to-blue-50 p-4">
+          <button
+            onClick={() => setDismissedPrompt(true)}
+            className="absolute top-2 right-2 rounded-lg p-1 text-gray-400 transition-colors hover:bg-white/50 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex items-start gap-3 pr-6">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100">
+              <User className="h-5 w-5 text-primary-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900">Get better explanations!</h3>
+              <p className="mt-1 text-sm text-gray-600">
+                Tell us your grade level so we can adjust explanations to your level
+              </p>
+              <button
+                onClick={() => navigate('/profile')}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              >
+                Set Grade Level
+                <ChevronDown className="h-3.5 w-3.5 rotate-[-90deg]" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Bar */}
       <div className="mb-8 flex flex-wrap items-center gap-3">
