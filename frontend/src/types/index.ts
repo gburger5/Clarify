@@ -6,6 +6,7 @@ export interface UserProfile {
   selectedLanguage: SupportedLanguage | null;
   age?: number;
   gradeLevel?: string;
+  hintsMode?: boolean;
   createdAt: number;
 }
 

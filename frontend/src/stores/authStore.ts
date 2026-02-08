@@ -10,6 +10,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../config/firebase';
 import type { UserProfile, SupportedLanguage } from '../types';
+import { useAppStore } from './appStore';
 
 interface AuthState {
   user: User | null;
@@ -21,6 +22,7 @@ interface AuthState {
   signUpWithEmail: (email: string, password: string, age?: number, gradeLevel?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateLanguage: (language: SupportedLanguage) => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   init: () => () => void;
 }
 
@@ -107,11 +109,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }));
   },
 
+  updateProfile: async (updates) => {
+    const { user } = get();
+    if (!user) return;
+    const ref = doc(db, 'users', user.uid);
+    await setDoc(ref, updates, { merge: true });
+    set((state) => ({
+      profile: state.profile ? { ...state.profile, ...updates } : null,
+    }));
+  },
+
   init: () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const profile = await ensureUserProfile(user);
         set({ user, profile, initialized: true, loading: false });
+        // Sync hints mode from profile to app store
+        if (profile.hintsMode !== undefined) {
+          useAppStore.getState().setHintsMode(profile.hintsMode);
+        }
       } else {
         set({ user: null, profile: null, initialized: true, loading: false });
       }

@@ -10,6 +10,20 @@ function dataURLtoBase64(dataUrl: string): { base64: string; mimeType: string } 
   return { base64, mimeType };
 }
 
+function sanitizeJSON(jsonString: string): string {
+  // Remove any control characters that would break JSON parsing
+  // but preserve intentional JSON structure
+  return jsonString
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
+      // Keep newlines and tabs for now, we'll handle them differently
+      if (match === '\n') return '\\n';
+      if (match === '\r') return '\\r';
+      if (match === '\t') return '\\t';
+      // Remove other control characters
+      return '';
+    });
+}
+
 export async function analyzeHomework(
   imageDataUrl: string,
   targetLanguage: SupportedLanguage,
@@ -23,20 +37,25 @@ export async function analyzeHomework(
     : '';
 
   const explanationInstruction = hintsMode
-    ? `**explanation**: Provide helpful HINTS in ${targetLanguage} to guide the student toward solving this on their own. DO NOT give the complete solution. Instead, ask guiding questions, suggest which concepts to review, or give the first step only. Encourage critical thinking. For example, "What operation would help you isolate x?" or "Remember the order of operations: PEMDAS."`
-    : `**explanation**: Provide a clear, step-by-step explanation of how to solve or understand this homework in ${targetLanguage}. Use simple language appropriate for a student. If it's math, show each step. If it's a reading/history/science assignment, explain the key concepts.`;
+    ? `**explanation**: Give friendly, encouraging HINTS in ${targetLanguage} to help the student figure this out themselves. Don't give away the answer! Instead, ask thought-provoking questions, suggest what to think about, or give just the first step. Be supportive and make them feel capable. For example: "What do you think would happen if you moved that number to the other side?" or "Think about what PEMDAS tells us to do first here."`
+    : `**explanation**: Explain this in ${targetLanguage} like you're a friendly tutor sitting next to the student. Be conversational, warm, and encouraging. Break it down step-by-step, but make it feel natural - like you're having a conversation, not reading from a textbook. Use "you" and "we" to make it personal. If it helps, use simple analogies or real-world examples. Show your work for math problems, but explain WHY each step matters.`;
 
-  const prompt = `You are an expert tutor helping a student understand their homework.
+  const prompt = `You are a warm, friendly tutor helping a student with their homework. Your goal is to make them feel confident and capable.
 ${gradeLevelInstruction}
-Analyze the image of homework and provide:
+Analyze the homework image and provide:
 
 1. **originalText**: Extract all text/problems visible in the image exactly as written.
 2. **translatedText**: Translate the extracted text into ${targetLanguage}.
 3. ${explanationInstruction}
-4. **subject**: Identify the subject (e.g., "Math", "Science", "History", "English", "Biology").
+4. **subject**: Identify the subject in ENGLISH ONLY (e.g., "Math", "Science", "History", "English", "Biology").
 5. **sourceLanguage**: The language the original homework is written in (e.g., "English").
 
-IMPORTANT: The explanation must be entirely in ${targetLanguage}. Be thorough but brief, do not include unnecessary details. Do not use Markdown syntax when writing the explanation. Keep it to Plaintext.
+IMPORTANT:
+- The explanation must be entirely in ${targetLanguage}
+- The subject must ALWAYS be in English
+- Be thorough but brief, do not include unnecessary details
+- Do not use Markdown syntax, line breaks, or special characters in the explanation
+- Keep all text to single-line plaintext without newlines
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -55,7 +74,8 @@ Respond ONLY with valid JSON in this exact format:
   const text = result.response.text();
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('Failed to parse Gemini response');
-  return JSON.parse(jsonMatch[0]) as GeminiAnalysis;
+  const sanitized = sanitizeJSON(jsonMatch[0]);
+  return JSON.parse(sanitized) as GeminiAnalysis;
 }
 
 export async function analyzeText(
@@ -69,12 +89,12 @@ export async function analyzeText(
     : '';
 
   const explanationInstruction = hintsMode
-    ? `**explanation**: Provide helpful HINTS in ${targetLanguage} to guide the student toward solving this on their own. DO NOT give the complete solution. Instead, ask guiding questions, suggest which concepts to review, or give the first step only. Encourage critical thinking. For example, "What operation would help you isolate x?" or "Remember the order of operations: PEMDAS."`
-    : `**explanation**: Provide a clear, step-by-step explanation of how to solve or understand this homework in ${targetLanguage}. Use simple language appropriate for a student. If it's math, show each step. If it's a reading/history/science assignment, explain the key concepts.`;
+    ? `**explanation**: Give friendly, encouraging HINTS in ${targetLanguage} to help the student figure this out themselves. Don't give away the answer! Instead, ask thought-provoking questions, suggest what to think about, or give just the first step. Be supportive and make them feel capable. For example: "What do you think would happen if you moved that number to the other side?" or "Think about what PEMDAS tells us to do first here."`
+    : `**explanation**: Explain this in ${targetLanguage} like you're a friendly tutor sitting next to the student. Be conversational, warm, and encouraging. Break it down step-by-step, but make it feel natural - like you're having a conversation, not reading from a textbook. Use "you" and "we" to make it personal. If it helps, use simple analogies or real-world examples. Show your work for math problems, but explain WHY each step matters.`;
 
-  const prompt = `You are an expert tutor helping a student understand their homework.
+  const prompt = `You are a warm, friendly tutor helping a student with their homework. Your goal is to make them feel confident and capable.
 ${gradeLevelInstruction}
-The student has typed in the following homework problem:
+The student has typed in this homework problem:
 
 "${homeworkText}"
 
@@ -82,10 +102,16 @@ Provide:
 1. **originalText**: The homework text exactly as the student typed it.
 2. **translatedText**: Translate the text into ${targetLanguage}.
 3. ${explanationInstruction}
-4. **subject**: Identify the subject (e.g., "Math", "Science", "History", "English", "Biology").
+4. **subject**: Identify the subject in ENGLISH ONLY (e.g., "Math", "Science", "History", "English", "Biology").
 5. **sourceLanguage**: The language the original homework is written in (e.g., "English").
 
-IMPORTANT: The explanation must be entirely in ${targetLanguage}. Be thorough but brief, do not include unnecessary details. Do not use Markdown syntax when writing the explanation. Keep it to Plaintext.
+IMPORTANT:
+- The explanation must be entirely in ${targetLanguage}
+- The subject must ALWAYS be in English
+- Be thorough but brief, do not include unnecessary details
+- Do not use Markdown syntax, line breaks, or special characters in the explanation
+- Keep all text to single-line plaintext without newlines
+
 Respond ONLY with valid JSON in this exact format:
 {
   "originalText": "...",
@@ -100,7 +126,8 @@ Respond ONLY with valid JSON in this exact format:
   const text = result.response.text();
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('Failed to parse Gemini response');
-  return JSON.parse(jsonMatch[0]) as GeminiAnalysis;
+  const sanitized = sanitizeJSON(jsonMatch[0]);
+  return JSON.parse(sanitized) as GeminiAnalysis;
 }
 
 export async function askFollowUp(
@@ -108,15 +135,15 @@ export async function askFollowUp(
   context: string,
   targetLanguage: SupportedLanguage,
 ): Promise<string> {
-  const prompt = `You are a helpful tutor. A student previously received this homework explanation:
+  const prompt = `You're a patient, friendly tutor continuing a conversation with a student. Earlier, you explained this:
 
 "${context}"
 
-The student is now asking a follow-up question in ${targetLanguage}: "${question}"
+Now the student asks: "${question}"
 
-Please answer their question clearly and helpfully in ${targetLanguage}. Use simple language appropriate for a student. Be encouraging.
+Respond in ${targetLanguage} like you're having a natural conversation. Be warm, encouraging, and genuinely helpful. If they're confused, acknowledge it's okay and explain in a different way. If they're getting it, celebrate that! Keep it conversational and supportive - you're not just delivering information, you're building their confidence.
 
-Respond with ONLY your answer text, no JSON or formatting wrappers.`;
+Respond with ONLY your answer (no JSON, no formatting tags - just natural conversational text).`;
 
   const result = await model.generateContent(prompt);
   return result.response.text();

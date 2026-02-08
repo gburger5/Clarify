@@ -11,7 +11,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 export default function Profile() {
-  const { user, profile, signOut, updateLanguage } = useAuthStore();
+  const { user, profile, signOut, updateLanguage, updateProfile } = useAuthStore();
   const { reset, hintsMode, setHintsMode } = useAppStore();
   const navigate = useNavigate();
 
@@ -250,7 +250,11 @@ export default function Profile() {
               <p className="text-xs text-gray-500">Get hints instead of full solutions</p>
             </div>
             <button
-              onClick={() => setHintsMode(!hintsMode)}
+              onClick={async () => {
+                const newValue = !hintsMode;
+                setHintsMode(newValue);
+                await updateProfile({ hintsMode: newValue });
+              }}
               className={`relative h-6 w-11 rounded-full transition-colors ${
                 hintsMode ? 'bg-primary-600' : 'bg-gray-300'
               }`}
